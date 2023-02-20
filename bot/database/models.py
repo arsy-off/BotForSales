@@ -12,6 +12,7 @@ class Operation(Base):
     status_id = Column(Integer)
     type_id = Column(Integer)
     author_id = Column(Integer)
+    store_id = Column(Integer)
     sum = Column(Numeric)
     comment = Column(Integer)
 
@@ -28,14 +29,13 @@ class OperationType(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text)
-    category_id = Column(Integer)
-    subcategory_id = Column(Integer)
 
 
 class OperationTypeCategory(Base):
     __tablename__ = 'operation_type_categories'
 
     id = Column(Integer, primary_key=True)
+    type_id = Column(Integer)
     name = Column(Text)
 
 
@@ -43,6 +43,7 @@ class OperationTypeSubCategory(Base):
     __tablename__ = 'operation_type_subcategories'
 
     id = Column(Integer, primary_key=True)
+    type_id = Column(Integer)
     name = Column(Text)
 
 
@@ -56,7 +57,6 @@ class Employee(Base):
     hiring_date = Column()
     firing_date = Column()
     position_id = Column(Integer)
-    account_id = Column(Integer)
 
 
 class BotAccount(Base):
@@ -73,5 +73,6 @@ class BotAccountSession(Base):
 
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer)
-    active_from = Column(TIMESTAMP)
     store_id = Column(Integer)
+    active_from = Column(TIMESTAMP)
+

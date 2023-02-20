@@ -1,6 +1,6 @@
 from sqlalchemy.future import select
 from bot.loader import async_session
-from .models import BotAccount
+from .models import *
 
 
 class BotAccountTable:
@@ -26,3 +26,13 @@ class BotAccountTable:
             async with session.begin():
                 account.telegram_id = str(telegram_id)
                 session.add(account)
+
+
+class OperationTypeTable:
+    @staticmethod
+    async def get_all():
+        async with async_session() as session:
+            async with session.begin():
+                result = await session.execute(select(OperationType))
+
+                return result.scalars().all()

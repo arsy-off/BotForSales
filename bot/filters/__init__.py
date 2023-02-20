@@ -1,3 +1,3 @@
-from .common import IsAuthorized
+from .common import IsAuthorized, IsManager
 
-__all__ = ['IsAuthorized']
+__all__ = ['IsAuthorized', 'IsManager']

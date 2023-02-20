@@ -6,6 +6,7 @@ class AuthorizationFSM(StatesGroup):
 
 
 class AddOperationFSM(StatesGroup):
+    operation_type = State()
     operation_date = State()
     article = State()
     amount = State()
@@ -15,6 +16,8 @@ class AddOperationFSM(StatesGroup):
 
 
 class EditOperationFSM(StatesGroup):
+    operation_type = State()
+    operation_date = State()
     operation_number = State()
     value_select = State()
     value_input = State()

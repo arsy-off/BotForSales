@@ -7,3 +7,7 @@ class IsAuthorized(BoundFilter):
     async def check(self, message: types.Message) -> bool:
         return bool(await BotAccountTable.get_by_telegram_id(str(message.from_user.id)))
 
+
+class IsManager(BoundFilter):
+    async def check(self, message: types.Message) -> bool:
+        return False
