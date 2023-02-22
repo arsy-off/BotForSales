@@ -1,7 +1,6 @@
-import types
-
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from bot.database.models import *
+
 
 main_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -33,8 +32,16 @@ def get_actual_operation_types(op_types: list[OperationType]) -> InlineKeyboardM
 
 
 def get_actual_type_categories(
-        op_types: list[OperationTypeCategory | OperationTypeSubCategory]) -> InlineKeyboardMarkup:
+        op_types: list[OperationTypeCategory | OperationTypeSubcategory]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text=op_type.name, callback_data=op_type.id)] for op_type in op_types]
     )
 
+
+confirmation = ReplyKeyboardMarkup(
+    [
+        [
+            KeyboardButton(text='Всё ок!')
+        ]
+    ]
+)

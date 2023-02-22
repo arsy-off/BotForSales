@@ -4,7 +4,7 @@ from bot.loader import dispatcher
 from bot.states import AuthorizationFSM
 from bot.filters import IsAuthorized
 from bot.database import BotAccountTable
-from bot.keyboards import common
+from bot.keyboards import common, manager, employee
 
 START_TEXT = 'Добро пожаловать!\n' \
              '/help - Получить информацию по работе с ботом\n' \
@@ -55,7 +55,14 @@ async def authorization_process_password(message: types.Message, state: FSMConte
     else:
         await BotAccountTable.update_telegram_id(account, message.from_user.id)
         await state.finish()
-        await message.answer(
-            text='Добро пожаловать!',
-            reply_markup=common.authorisation_success
-        )
+
+        if account.is_manager:
+            await message.answer(
+                text='Добро пожаловать!\nЧто Вы хотите сделать?',
+                reply_markup=manager.main_menu
+            )
+        else:
+            await message.answer(
+                text='Добро пожаловать!\nЧто Вы хотите сделать?',
+                reply_markup=employee.main_menu
+            )

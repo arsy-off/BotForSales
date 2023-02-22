@@ -10,4 +10,5 @@ class IsAuthorized(BoundFilter):
 
 class IsManager(BoundFilter):
     async def check(self, message: types.Message) -> bool:
-        return False
+        account = await BotAccountTable.get_by_telegram_id(str(message.from_user.id))
+        return account.is_manager
