@@ -13,8 +13,8 @@ class Operation(Base):
     subcategory_id = Column(Integer)
     author_id = Column(Integer)
     store_id = Column(Integer)
-    sum = Column(Numeric)
-    comment = Column(Integer)
+    amount = Column(Numeric)
+    comment = Column(Text)
 
 
 class OperationStatus(Base):
@@ -64,7 +64,7 @@ class BotAccount(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     employee_id = Column(Integer)
-    telegram_id = Column(Text)
+    telegram_id = Column(Integer)
     password = Column(Text)
     is_manager = Column(Boolean)
 
@@ -74,6 +74,17 @@ class BotAccountSession(Base):
 
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer)
+    telegram_id = Column(Integer)
     store_id = Column(Integer)
     active_from = Column(TIMESTAMP)
 
+
+class Store(Base):
+    __tablename__ = 'store'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Text)
+    type = Column(Text)
+    address = Column(Text)
+    inn = Column(Integer)
+    kkt = Column(Integer)

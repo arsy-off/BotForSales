@@ -1,3 +1,3 @@
-from .common import AuthorizationFSM, AddOperationFSM, EditOperationFSM
+from .common import AuthorizationFSM, CurrentStoreFSM, AddOperationFSM, EditOperationFSM
 
-__all__ = ['AuthorizationFSM', 'AddOperationFSM', 'EditOperationFSM']
+__all__ = ['AuthorizationFSM', 'CurrentStoreFSM', 'AddOperationFSM', 'EditOperationFSM']

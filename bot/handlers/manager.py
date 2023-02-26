@@ -13,7 +13,7 @@ async def main_menu(message: types.Message):
 
 
 @dispatcher.callback_query_handler(IsAuthorized(), IsManager(), lambda call: call.data == 'main_menu')
-async def call_main_menu(call: types.CallbackQuery):
+async def main_menu_cb(call: types.CallbackQuery):
     await call.message.answer(
         text='Что Вы хотите сделать?',
         reply_markup=manager.main_menu
