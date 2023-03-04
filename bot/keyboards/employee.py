@@ -1,6 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
-
 main_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [
@@ -13,6 +12,12 @@ main_menu = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text='Редактировать запись',
                 callback_data='edit'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Изменить магазин',
+                callback_data='change_store'
             )
         ]
     ]

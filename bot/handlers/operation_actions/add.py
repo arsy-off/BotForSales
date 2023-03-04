@@ -15,17 +15,75 @@ async def add_process_type(call: types.CallbackQuery):
 
     await call.message.answer(
         text='Выберите тип операции:',
-        reply_markup=states.markup_list(op_types)
+        reply_markup=states.markup_list(op_types, add_cancel_button=False)
     )
 
 
 @dispatcher.callback_query_handler(state=AddOperationFSM.operation_type)
-async def add_process_date(call: types.CallbackQuery, state: FSMContext):
+async def add_process_category(call: types.CallbackQuery, state: FSMContext):
     if call.data == 'cancel':
-        return await state.finish()
+        await state.finish()
+        return await call.message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
+
+    try:
+        type_id = int(call.data)
+    except ValueError:
+        return
+
+    await AddOperationFSM.next()
+
+    categories = await crud.OperationTypeCategoryTable.get_by_operation_type_id(type_id)
+    await call.message.answer(
+        text='Выберите категорию:',
+        reply_markup=states.markup_list(categories)
+    )
+
+
+@dispatcher.callback_query_handler(state=AddOperationFSM.operation_category)
+async def add_process_article(call: types.CallbackQuery, state: FSMContext):
+    if call.data == 'cancel':
+        await state.finish()
+        return await call.message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
+
+    try:
+        category_id = int(call.data)
+    except ValueError:
+        return
+
+    await AddOperationFSM.next()
 
     async with state.proxy() as data:
-        data['operation_type'] = call.data
+        data['category_id'] = call.data
+
+    subcategories = await crud.OperationTypeSubcategoryTable.get_by_category_id(category_id)
+    await call.message.answer(
+        text='Выберите статью:',
+        reply_markup=states.markup_list(subcategories)
+    )
+
+
+@dispatcher.callback_query_handler(state=AddOperationFSM.article)
+async def add_process_date(call: types.CallbackQuery, state: FSMContext):
+    if call.data == 'cancel':
+        await state.finish()
+        return await call.message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
+
+    try:
+        subcategory_id = int(call.data)
+    except ValueError:
+        return
+
+    async with state.proxy() as data:
+        data['article_id'] = subcategory_id
 
     await AddOperationFSM.next()
     await call.message.answer(
@@ -36,9 +94,13 @@ async def add_process_date(call: types.CallbackQuery, state: FSMContext):
 
 
 @dispatcher.message_handler(state=AddOperationFSM.operation_date)
-async def add_process_article(message: types.Message, state: FSMContext):
+async def add_process_amount(message: types.Message, state: FSMContext):
     if message.text == 'Отмена':
-        return await state.finish()
+        await state.finish()
+        return await message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
 
     async with state.proxy() as data:
         if message.text == 'Продолжить':
@@ -47,36 +109,23 @@ async def add_process_article(message: types.Message, state: FSMContext):
             try:
                 data['operation_date'] = datetime.strptime(message.text, '%d.%m.%Y %H:%M')
             except ValueError:
-                await message.answer(text='Проверьте введённый формат и попробуйте ещё раз')
+                return await message.answer(text='Проверьте введённый формат и попробуйте ещё раз')
 
-    await AddOperationFSM.next()
-
-    subcategories = await crud.OperationTypeSubcategoryTable.get_by_operation_type_id(int(data['operation_type']))
-    await message.answer(
-        text='Выберите статью:',
-        reply_markup=states.markup_list(subcategories)
-    )
-
-
-@dispatcher.callback_query_handler(state=AddOperationFSM.article)
-async def add_process_amount(call: types.CallbackQuery, state: FSMContext):
-    if call.data == 'cancel':
-        return await state.finish()
-
-    async with state.proxy() as data:
-        data['article'] = call.data
-
-    await AddOperationFSM.next()
-    await call.message.answer(
-        text='Введите сумму статьи в формате: "100,00"',
-        reply_markup=states.cancel
-    )
+        await AddOperationFSM.next()
+        await message.answer(
+            text='Введите сумму статьи в формате: "100,00"',
+            reply_markup=states.cancel
+        )
 
 
 @dispatcher.message_handler(state=AddOperationFSM.amount)
 async def add_process_comment(message: types.Message, state: FSMContext):
     if message.text == 'Отмена':
-        return await state.finish()
+        await state.finish()
+        return await message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
 
     try:
         numeric_amount = float(message.text.replace(',', '.'))
@@ -99,37 +148,18 @@ async def add_process_confirmation(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['comment'] = message.text
 
-    type_obj = await crud.OperationTypeTable.get_by_id(int(data["operation_type"]))
-    article_obj = await crud.OperationTypeSubcategoryTable.get_by_id(int(data["article"]))
+    article = await crud.OperationTypeSubcategoryTable.get_by_id(int(data["article_id"]))
+    session = await crud.BotAccountSessionTable.get_by_telegram_id(message.from_user.id)
+
+    store = await crud.StoreTable.get_by_id(session.store_id)
 
     confirmation_text = f'Проверьте введённые данные операции:\n' \
-                        f'Тип: {type_obj.name}\n' \
+                        f'Магазин: {store.name}\n' \
+                        f'Статья: {article.name}\n' \
                         f'Дата: {datetime.strftime(data["operation_date"], "%d.%m.%Y %H:%M")}\n' \
-                        f'Статья: {article_obj.name}\n' \
                         f'Сумма: {data["amount"]:.2f}\n' \
                         f'Комментарий: {data["comment"]}'
-
-    await AddOperationFSM.next()
-    await message.answer(
-        text=confirmation_text,
-        reply_markup=states.confirmation
-    )
-
-
-@dispatcher.message_handler(state=AddOperationFSM.comment)
-async def add_process_confirmation(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['comment'] = message.text
-
-    type_obj = await crud.OperationTypeTable.get_by_id(int(data["operation_type"]))
-    article_obj = await crud.OperationTypeSubcategoryTable.get_by_id(int(data["article"]))
-
-    confirmation_text = f'Проверьте введённые данные операции:\n' \
-                        f'Тип: {type_obj.name}\n' \
-                        f'Дата: {datetime.strftime(data["operation_date"], "%d.%m.%Y %H:%M")}\n' \
-                        f'Статья: {article_obj.name}\n' \
-                        f'Сумма: {data["amount"]:.2f}\n' \
-                        f'Комментарий: {data["comment"]}'
+    # f'Тип: {data["article_id"]}\n' \
 
     await AddOperationFSM.next()
     await message.answer(
@@ -142,13 +172,14 @@ async def add_process_confirmation(message: types.Message, state: FSMContext):
 async def add_process_action(call: types.CallbackQuery, state: FSMContext):
     if call.data == 'confirm':
         account_session = await crud.BotAccountSessionTable.get_by_telegram_id(call.from_user.id)
+        author = await crud.BotAccountTable.get_by_id(account_session.account_id)
         async with state.proxy() as data:
             await crud.OperationTable.create(
                 dt=data['operation_date'],
-                subcategory_id=int(data['article']),
+                subcategory_id=int(data['article_id']),
                 amount=float(data['amount']),
                 comment=data['comment'],
-                author_id=account_session.account_id,
+                author_id=author.employee_id,
                 store_id=account_session.store_id
             )
         await state.finish()
@@ -166,8 +197,8 @@ async def add_process_action(call: types.CallbackQuery, state: FSMContext):
     elif call.data == 'change_article':
         await AddOperationFSM.article.set()
         async with state.proxy() as data:
-            subcategories = await crud.\
-                OperationTypeSubcategoryTable.get_by_operation_type_id(int(data['operation_type']))
+            subcategories = await crud. \
+                OperationTypeSubcategoryTable.get_by_category_id(int(data['category_id']))
             await call.message.answer(
                 text='Выберите статью:',
                 reply_markup=states.markup_list(subcategories)
@@ -185,3 +216,7 @@ async def add_process_action(call: types.CallbackQuery, state: FSMContext):
         )
     elif call.data == 'cancel':
         await state.finish()
+        return await call.message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )

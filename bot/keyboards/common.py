@@ -10,9 +10,8 @@ cancel = ReplyKeyboardMarkup(
     one_time_keyboard=True
 )
 
-
 to_main_menu = InlineKeyboardMarkup(
-    [
+    inline_keyboard=[
         [
             InlineKeyboardButton(text='Главное меню', callback_data='main_menu')
         ]

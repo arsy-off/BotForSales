@@ -9,10 +9,15 @@ class CurrentStoreFSM(StatesGroup):
     action = State()
 
 
+class ChangeCurrentStoreFSM(StatesGroup):
+    action = State()
+
+
 class AddOperationFSM(StatesGroup):
     operation_type = State()
-    operation_date = State()
+    operation_category = State()
     article = State()
+    operation_date = State()
     amount = State()
     comment = State()
     confirmation = State()
@@ -20,8 +25,16 @@ class AddOperationFSM(StatesGroup):
 
 class EditOperationFSM(StatesGroup):
     operation_type = State()
+    operation_category = State()
+    article = State()
     operation_date = State()
-    operation_number = State()
-    value_select = State()
-    value_input = State()
+    show_operations = State()
+    confirm_choice = State()
+    value_selection = State()
+
+    value_input_subcategory = State()
+    value_input_date = State()
+    value_input_amount = State()
+
     confirmation = State()
+    action_after = State()

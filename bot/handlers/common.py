@@ -1,30 +1,39 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from bot.loader import dispatcher
-from bot.states import AuthorizationFSM, CurrentStoreFSM
+from bot.states import AuthorizationFSM, CurrentStoreFSM, ChangeCurrentStoreFSM
 from bot.filters import IsAuthorized, IsManager, HasActiveSession
 from bot.database import BotAccountTable
 from bot.keyboards import common, manager, employee, states
 from bot.database import crud
 
-START_TEXT = 'Добро пожаловать!\n' \
-             '/help - Получить информацию по работе с ботом\n' \
-             '/authorize - Авторизоваться в системе'
+START_TEXT_UNAUTHORIZED = 'Добро пожаловать!\n' \
+                          '/help - Получить информацию по работе с ботом\n' \
+                          '/authorize - Авторизоваться в системе'
+
+START_TEXT_AUTHORIZED = 'Добро пожаловать!\n' \
+                        '/help - Получить информацию по работе с ботом\n' \
+                        '/main_menu - Главное меню'
 
 HELP_TEXT_UNAUTHORIZED = 'Доступные команды:\n' \
-            '/start - Начать работу с ботом\n' \
-            '/help - Получить информацию по работе с ботом\n' \
-            '/authorize - Авторизоваться в системе'
+                         '/start - Начать работу с ботом\n' \
+                         '/help - Получить информацию по работе с ботом\n' \
+                         '/authorize - Авторизоваться в системе'
 
 HELP_TEXT_AUTHORIZED = 'Доступные команды:\n' \
-            '/start - Начать работу с ботом\n' \
-            '/help - Получить информацию по работе с ботом\n' \
-            '/main_menu - Главное меню'
+                       '/start - Начать работу с ботом\n' \
+                       '/help - Получить информацию по работе с ботом\n' \
+                       '/main_menu - Главное меню'
 
 
-@dispatcher.message_handler(commands=['start'])
+@dispatcher.message_handler(~IsAuthorized(), commands=['start'])
 async def start(message: types.Message):
-    await message.answer(text=START_TEXT)
+    await message.answer(text=START_TEXT_UNAUTHORIZED)
+
+
+@dispatcher.message_handler(IsAuthorized(), commands=['start'])
+async def start(message: types.Message):
+    await message.answer(text=START_TEXT_AUTHORIZED)
 
 
 @dispatcher.message_handler(~IsAuthorized(), commands=['help'])
@@ -84,11 +93,13 @@ async def authorization_process_password(message: types.Message, state: FSMConte
             )
 
 
+# <-- Current session store -->
+
 @dispatcher.message_handler(IsAuthorized(), ~IsManager(), ~HasActiveSession())
-async def set_current_store(call: types.CallbackQuery):
+async def set_current_store(message: types.Message):
     await CurrentStoreFSM.action.set()
     stores = await crud.StoreTable.get_all()
-    await call.message.answer(
+    await message.answer(
         text='Выберите магазин на текущий день:',
         reply_markup=states.markup_list(stores)
     )
@@ -106,6 +117,13 @@ async def set_current_store_cb(call: types.CallbackQuery):
 
 @dispatcher.callback_query_handler(state=CurrentStoreFSM.action)
 async def set_process_current_store(call: types.CallbackQuery, state: FSMContext):
+    if call.data == 'cancel':
+        await state.finish()
+        return await call.message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
+
     account = await crud.BotAccountTable.get_by_telegram_id(call.from_user.id)
     await crud.BotAccountSessionTable.create(
         account_id=account.id,
@@ -114,6 +132,37 @@ async def set_process_current_store(call: types.CallbackQuery, state: FSMContext
     )
     await state.finish()
     await call.message.answer(
-        text='Магазин на текущий день выбран успешно',
+        text='Магазин выбран успешно',
+        reply_markup=employee.main_menu
+    )
+
+
+@dispatcher.callback_query_handler(IsAuthorized(), ~IsManager(), lambda call: call.data == 'change_store')
+async def change_current_store(call: types.CallbackQuery):
+    await ChangeCurrentStoreFSM.action.set()
+    stores = await crud.StoreTable.get_all()
+    await call.message.answer(
+        text='Выберите магазин:',
+        reply_markup=states.markup_list(stores)
+    )
+
+
+@dispatcher.callback_query_handler(state=ChangeCurrentStoreFSM.action)
+async def change_process_current_store(call: types.CallbackQuery, state: FSMContext):
+    if call.data == 'cancel':
+        await state.finish()
+        return await call.message.answer(
+            text='Отменено',
+            reply_markup=common.to_main_menu
+        )
+
+    session = await crud.BotAccountSessionTable.get_by_telegram_id(call.from_user.id)
+    await crud.BotAccountSessionTable.update(
+        account_id=session.id,
+        store_id=int(call.data)
+    )
+    await state.finish()
+    await call.message.answer(
+        text='Магазин обновлён успешно',
         reply_markup=employee.main_menu
     )

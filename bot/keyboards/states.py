@@ -26,7 +26,6 @@ skip_state = ReplyKeyboardMarkup(
     one_time_keyboard=True
 )
 
-
 cancel = ReplyKeyboardMarkup(
     [
         [
@@ -36,7 +35,6 @@ cancel = ReplyKeyboardMarkup(
     resize_keyboard=True,
     one_time_keyboard=True
 )
-
 
 confirmation = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -74,6 +72,86 @@ confirmation = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text='Отмена',
                 callback_data='cancel'
+            )
+        ]
+    ]
+)
+
+operation_choice_confirmation = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Операция выбрана корректно',
+                callback_data='correct_choice'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Выбрать операцию с другим номером',
+                callback_data='change_choice'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Отмена',
+                callback_data='cancel'
+            )
+        ]
+    ]
+)
+
+operation_value_selection = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Статью',
+                callback_data='change_operation_subcategory'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Дату',
+                callback_data='change_operation_date'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Сумму',
+                callback_data='change_operation_amount'
+            )
+        ]
+    ]
+)
+
+operation_value_change_confirmation = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Подтвердить',
+                callback_data='confirm'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Отмена',
+                callback_data='cancel'
+            )
+        ]
+    ]
+)
+
+action_after_confirmation = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Изменить ещё атрибут',
+                callback_data='change_another'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Закончить',
+                callback_data='end'
             )
         ]
     ]

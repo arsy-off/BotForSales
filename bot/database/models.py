@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, TIMESTAMP, Numeric, Boolean
+from sqlalchemy import Column, BigInteger, Integer, Text, TIMESTAMP, Numeric, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -64,7 +64,7 @@ class BotAccount(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     employee_id = Column(Integer)
-    telegram_id = Column(Integer)
+    telegram_id = Column(BigInteger)
     password = Column(Text)
     is_manager = Column(Boolean)
 
@@ -74,7 +74,7 @@ class BotAccountSession(Base):
 
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer)
-    telegram_id = Column(Integer)
+    telegram_id = Column(BigInteger)
     store_id = Column(Integer)
     active_from = Column(TIMESTAMP)
 
