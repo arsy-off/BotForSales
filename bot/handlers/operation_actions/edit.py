@@ -163,8 +163,9 @@ async def edit_show_operations(message: types.Message, state: FSMContext):
         fig.tight_layout()
 
         buf = io.BytesIO()
-        plt.savefig(buf, format='pdf', bbox_inches='tight', dpi=400)
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=400)
         buf.seek(0)
+        buf.name = 'Список операций.png'
 
         await EditOperationFSM.next()
         await message.answer_document(
