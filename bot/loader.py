@@ -13,6 +13,6 @@ dispatcher = Dispatcher(bot, storage=storage)
 engine = create_async_engine(
     f'postgresql+asyncpg://{os.environ["DATABASE_USER"]}:{os.environ["DATABASE_PASSWORD"]}'
     f'@{os.environ["DATABASE_HOST"]}:{os.environ["DATABASE_PORT"]}/{os.environ["DATABASE_NAME"]}',
-    echo=True
+    echo=False
 )
 async_session = async_sessionmaker(engine, expire_on_commit=False)
